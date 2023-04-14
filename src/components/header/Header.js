@@ -1,23 +1,19 @@
-import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import styles from "./Header.module.scss";
-import { FaShoppingCart, FaTimes, FaUserCircle } from "react-icons/fa";
-import { HiOutlineMenuAlt3 } from "react-icons/hi";
-import { auth } from "../../firebase/config";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
+import { signOut } from "firebase/auth";
 import { toast } from "react-toastify";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { auth } from "../../firebase/config";
+import Loader from "../loader/Loader";
+import { onAuthStateChanged } from "firebase/auth";
+import { useDispatch } from "react-redux";
 import {
-  REMOVE_ACTIVE_USER,
   SET_ACTIVE_USER,
+  REMOVE_ACTIVE_USER,
 } from "../../redux/slice/authSlice";
-import ShowOnLogin, { ShowOnLogout } from "../hiddenLink/hiddenLink";
-import { AdminOnlyLink } from "../adminOnlyRoute/AdminOnlyRoute";
-import {
-  CALCULATE_TOTAL_QUANTITY,
-  selectCartTotalQuantity,
-} from "../../redux/slice/cartSlice";
 
 const logo = (
   <div className={styles.logo}>
@@ -29,57 +25,28 @@ const logo = (
   </div>
 );
 
+const cart = (
+  <span className={styles.cart}>
+    <Link to="/cart" style={{ textDecoration: "none" }}>
+      Cart
+      <ShoppingCartIcon />
+      <p>0</p>
+    </Link>
+  </span>
+);
+
 const activeLink = ({ isActive }) => (isActive ? `${styles.active}` : "");
 
 const Header = () => {
   const [showMenu, setShowMenu] = useState(false);
-  const [displayName, setdisplayName] = useState("");
-  const [scrollPage, setScrollPage] = useState(false);
-  const cartTotalQuantity = useSelector(selectCartTotalQuantity);
-
-  useEffect(() => {
-    dispatch(CALCULATE_TOTAL_QUANTITY());
-  }, []);
+  const [isLoading, setIsLoading] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [photoURL, setPhotoURL] = useState("");
+  console.log(photoURL);
 
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
-
-  const fixNavbar = () => {
-    if (window.scrollY > 50) {
-      setScrollPage(true);
-    } else {
-      setScrollPage(false);
-    }
-  };
-  window.addEventListener("scroll", fixNavbar);
-
-  // Monitor currently sign in user
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // console.log(user);
-        if (user.displayName == null) {
-          const u1 = user.email.slice(0, -10);
-          const uName = u1.charAt(0).toUpperCase() + u1.slice(1);
-          setdisplayName(uName);
-        } else {
-          setdisplayName(user.displayName);
-        }
-
-        dispatch(
-          SET_ACTIVE_USER({
-            email: user.email,
-            userName: user.displayName ? user.displayName : displayName,
-            userID: user.uid,
-          })
-        );
-      } else {
-        setdisplayName("");
-        dispatch(REMOVE_ACTIVE_USER());
-      }
-    });
-  }, [dispatch, displayName]);
 
   const toggleMenu = () => {
     setShowMenu(!showMenu);
@@ -89,33 +56,64 @@ const Header = () => {
     setShowMenu(false);
   };
 
-  const logoutUser = () => {
+  const userSignOut = () => {
     signOut(auth)
       .then(() => {
-        toast.success("Logout successfully.");
+        toast.success("LogOut successful");
+        setIsLoading(false);
         navigate("/");
       })
       .catch((error) => {
         toast.error(error.message);
+        setIsLoading(false);
       });
   };
 
-  const cart = (
-    <span className={styles.cart}>
-      <Link to="/cart">
-        Cart
-        <FaShoppingCart size={20} />
-        <p>{cartTotalQuantity}</p>
-      </Link>
-    </span>
-  );
+  //  shoing currently active user
+
+  // charkhaniakash@gmail.com
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log(user);
+
+        //  this below code is for if user dont have username
+        if (user.displayName === null) {
+          // charkhaniakash@gmail.com
+          const u1 = user.email.slice(0, -10);
+          // charkhaniakash
+          const firstLetter = u1.charAt(0).toUpperCase();
+          // Charkhaniakash
+          const uName = firstLetter + u1.slice(1, u1.length);
+          setDisplayName(uName);
+        } else {
+          setDisplayName(user.displayName);
+        }
+
+        setDisplayName(user.displayName);
+        setPhotoURL(user.photoURL);
+        dispatch(
+          SET_ACTIVE_USER({
+            email: user.email,
+            userName: user.displayName ? user.displayName : displayName,
+            userID: user.uid,
+          })
+        );
+      } else {
+        setDisplayName("");
+        setPhotoURL("");
+        dispatch(REMOVE_ACTIVE_USER());
+      }
+    });
+  }, [dispatch, displayName]);
 
   return (
     <>
-      <header className={scrollPage ? `${styles.fixed}` : null}>
+      {isLoading && <Loader />}
+      <header>
         <div className={styles.header}>
           {logo}
-
           <nav
             className={
               showMenu ? `${styles["show-nav"]}` : `${styles["hide-nav"]}`
@@ -129,61 +127,87 @@ const Header = () => {
               }
               onClick={hideMenu}
             ></div>
-
             <ul onClick={hideMenu}>
               <li className={styles["logo-mobile"]}>
-                {logo}
-                <FaTimes size={22} color="#fff" onClick={hideMenu} />
+                <Link to="/">{logo}</Link>
+                <CloseIcon />
               </li>
               <li>
-                <AdminOnlyLink>
-                  <Link to="/admin/home">
-                    <button className="--btn --btn-primary">Admin</button>
-                  </Link>
-                </AdminOnlyLink>
-              </li>
-              <li>
-                <NavLink to="/" className={activeLink}>
+                <NavLink
+                  to="/"
+                  style={{ textDecoration: "none" }}
+                  className={activeLink}
+                >
                   Home
                 </NavLink>
               </li>
               <li>
-                <NavLink to="/contact" className={activeLink}>
-                  Contact Us
+                <NavLink
+                  to="/contact"
+                  style={{ textDecoration: "none" }}
+                  className={activeLink}
+                >
+                  contact
                 </NavLink>
               </li>
             </ul>
+
             <div className={styles["header-right"]} onClick={hideMenu}>
               <span className={styles.links}>
-                <ShowOnLogout>
-                  <NavLink to="/login" className={activeLink}>
+                {!displayName ? (
+                  <NavLink className={activeLink} to="/login">
                     Login
                   </NavLink>
-                </ShowOnLogout>
-                <ShowOnLogin>
-                  <a href="#home" style={{ color: "#ff7722" }}>
-                    <FaUserCircle size={16} />
-                    Hi, {displayName}
+                ) : (
+                  <a href="#home" style={{}}>
+                    <img
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                      }}
+                      alt=""
+                      src={photoURL}
+                    />{" "}
+                    Hi, <span style={{ color: "red" }}>{displayName}</span>
                   </a>
-                </ShowOnLogin>
-                <ShowOnLogin>
-                  <NavLink to="/order-history" className={activeLink}>
-                    My Orders
+                )}
+
+                {displayName ? (
+                  <>
+                    <NavLink className={activeLink} to="/orderhistory">
+                      My Order
+                    </NavLink>
+                    {!displayName ? (
+                      <NavLink className={activeLink} to="/register">
+                        Register
+                      </NavLink>
+                    ) : (
+                      ""
+                    )}
+                  </>
+                ) : (
+                  ""
+                )}
+
+                {displayName ? (
+                  <NavLink
+                    className={activeLink}
+                    to="/logout"
+                    onClick={userSignOut}
+                  >
+                    Log Out
                   </NavLink>
-                </ShowOnLogin>
-                <ShowOnLogin>
-                  <NavLink to="/" onClick={logoutUser}>
-                    Logout
-                  </NavLink>
-                </ShowOnLogin>
+                ) : (
+                  ""
+                )}
               </span>
               {cart}
             </div>
           </nav>
-
           <div className={styles["menu-icon"]}>
             {cart}
-            <HiOutlineMenuAlt3 size={28} onClick={toggleMenu} />
+            <MenuIcon onClick={toggleMenu} />
           </div>
         </div>
       </header>
@@ -192,3 +216,4 @@ const Header = () => {
 };
 
 export default Header;
+
