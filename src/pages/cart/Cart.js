@@ -32,9 +32,9 @@ const Cart = () => {
   };
 
   const decreaseCart = (cart) => {
-    dispatch(DECREASE_CART(cart));
+    DECREASE_CART(cart);
   };
-
+  
   const removeFromCart = (cart) => {
     dispatch(REMOVE_FROM_CART(cart));
   };
@@ -47,7 +47,7 @@ const Cart = () => {
     dispatch(CALCULATE_SUBTOTAL());
     dispatch(CALCULATE_TOTAL_QUANTITY());
     dispatch(SAVE_URL(""));
-  }, [cartItems, dispatch]);
+  }, [dispatch]);
 
   const url = window.location.href;
 
