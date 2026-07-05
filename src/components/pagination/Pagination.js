@@ -8,7 +8,7 @@ const Pagination = ({
   totalProducts,
 }) => {
   const pageNumbers = [];
-  const totalPages = totalProducts / productsPerPage;
+  const totalPages = totalProducts / 10;
   // Limit the page Numbers shown
   const [pageNumberLimit] = useState(5);
   const [maxPageNumberLimit, setmaxPageNumberLimit] = useState(5);
@@ -23,7 +23,7 @@ const Pagination = ({
   const paginateNext = () => {
     setCurrentPage(currentPage + 1);
     // Show next set of pageNumbers
-    if (currentPage + 1 > maxPageNumberLimit) {
+    if (currentPage + 1 >= maxPageNumberLimit) {
       setmaxPageNumberLimit(maxPageNumberLimit + pageNumberLimit);
       setminPageNumberLimit(minPageNumberLimit + pageNumberLimit);
     }
