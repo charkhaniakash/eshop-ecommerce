@@ -39,6 +39,10 @@ const ProductList = ({ products }) => {
     dispatch(FILTER_BY_SEARCH({ products, search }));
   }, [dispatch, products, search]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, products]);
+
   return (
     <div className={styles["product-list"]} id="product">
       <div className={styles.top}>
@@ -73,7 +77,7 @@ const ProductList = ({ products }) => {
       </div>
 
       <div className={grid ? `${styles.grid}` : `${styles.list}`}>
-        {products.lenght === 0 ? (
+        {products.length === 0 ? (
           <p>No product found.</p>
         ) : (
           <>
