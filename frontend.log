@@ -1,0 +1,14 @@
+
+> starter-template@0.1.0 start:frontend
+> react-scripts start
+
+Cannot find module 'ajv/dist/compile/codegen'
+Require stack:
+- /app/node_modules/ajv-keywords/dist/definitions/typeof.js
+- /app/node_modules/ajv-keywords/dist/keywords/typeof.js
+- /app/node_modules/ajv-keywords/dist/keywords/index.js
+- /app/node_modules/ajv-keywords/dist/index.js
+- /app/node_modules/schema-utils/dist/validate.js
+- /app/node_modules/schema-utils/dist/index.js
+- /app/node_modules/webpack-dev-server/lib/Server.js
+- /app/node_modules/react-scripts/scripts/start.js
